@@ -1,0 +1,20 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: img-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+minio:
+  endpoint: http://127.0.0.1:9005
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket: hndfactory
