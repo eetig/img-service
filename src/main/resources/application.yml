@@ -14,7 +14,10 @@ spring:
       max-request-size: 5MB
 
 minio:
-  endpoint: http://127.0.0.1:9005
+  # 预签名 URL 的对外访问地址：必须填「客户端能访问到的」地址。
+  # 填 127.0.0.1 时只有本机能打开图片，局域网其他机器会连不上，故用本机局域网 IP。
+  # 若本机 IP 变化（DHCP），需同步改这里。
+  endpoint: http://172.26.20.69:9005
   access-key: minioadmin
   secret-key: minioadmin
   bucket: hndfactory
