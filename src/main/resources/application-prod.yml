@@ -1,0 +1,83 @@
+# ============================================================
+# 生产环境配置（容器内生效，由 ENTRYPOINT 的 --spring.profiles.active=prod 激活）
+# 所有地址均通过环境变量注入，换服务器/换域名不需要重新打 jar
+# ============================================================
+server:
+  port: ${SERVER_PORT:8080}
+  # 优雅停机：容器收到 SIGTERM 后先停止接收新请求，处理完在途请求再退出
+  shutdown: graceful
+
+spring:
+  application:
+    name: img-service
+
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+  cloud:
+    nacos:
+      discovery:
+        # 容器之间用容器名互访，不要写 127.0.0.1（那是容器自己）
+        server-addr: ${NACOS_SERVER_ADDR:nacos:8848}
+        # Nacos 命名空间，留空=public。用命名空间隔离环境时必须填 namespace 的 ID（不是名称）
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        register-enabled: true
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+# ------------------------------------------------------------
+# MinIO
+# 注意：endpoint 必须填「浏览器能访问到的公网域名」，不能填容器名。
+# 原因：MinioClient.getPresignedObjectUrl() 生成的预签名 URL 里的 host 就是 endpoint，
+#       这个 URL 会返回给前端浏览器，写容器名浏览器无法解析。
+#       详见交付步骤里的「坑点 1」。
+# ------------------------------------------------------------
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://minio:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket: ${MINIO_BUCKET:hndfactory}
+
+# ============================================================
+# 以下 MySQL / Redis 当前 img-service 并未使用
+# （build.gradle 里没有 mysql driver / spring-boot-starter-data-redis 依赖）
+# 如果后续 img-service 要落库或做缓存，取消注释并补上对应依赖即可
+# ============================================================
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://${MYSQL_HOST:mysql}:${MYSQL_PORT:3306}/${MYSQL_DB:img_service}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+#    username: ${MYSQL_USER:root}
+#    password: ${MYSQL_PASSWORD:}
+#    hikari:
+#      maximum-pool-size: 10
+#      minimum-idle: 2
+#      connection-timeout: 30000
+#  data:
+#    redis:
+#      host: ${REDIS_HOST:redis}
+#      port: ${REDIS_PORT:6379}
+#      password: ${REDIS_PASSWORD:}
+#      database: ${REDIS_DB:0}
+#      timeout: 3000ms
+#      lettuce:
+#        pool:
+#          max-active: 8
+#          max-idle: 8
+#          min-idle: 0
+
+logging:
+  level:
+    root: info
+    org.example: info
+  file:
+    # 输出到挂载目录，1Panel 里可持久化到宿主机
+    name: /app/logs/img-service.log
+  logback:
+    rollingpolicy:
+      max-file-size: 20MB
+      max-history: 15
+      total-size-cap: 500MB

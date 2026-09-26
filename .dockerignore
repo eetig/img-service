@@ -1,0 +1,12 @@
+.gradle
+build
+.idea
+.git
+*.iml
+*.iws
+*.ipr
+out
+.vscode
+.DS_Store
+imgtool
+.imgtool

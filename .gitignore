@@ -41,3 +41,12 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### temp tooling ###
+imgtool/
+.imgtool/
+
+### 部署文件含真实凭据（MinIO AK/SK），不入库 ###
+docker-compose.yml
+docker-compose.override.yml
+.env

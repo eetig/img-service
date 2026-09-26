@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   application:
@@ -7,7 +7,7 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 127.0.0.1:8848
+        server-addr: ${NACOS_SERVER_ADDR:1Panel-nacos-qquH-standalone:8848}
   servlet:
     multipart:
       max-file-size: 5MB
@@ -15,9 +15,10 @@ spring:
 
 minio:
   # 预签名 URL 的对外访问地址：必须填「客户端能访问到的」地址。
-  # 填 127.0.0.1 时只有本机能打开图片，局域网其他机器会连不上，故用本机局域网 IP。
+  # 填 127.0.0.1 时只有本机能打开图片，局域网其他机器会连不上，故默认用本机局域网 IP。
   # 若本机 IP 变化（DHCP），需同步改这里。
-  endpoint: http://172.26.20.69:9005
-  access-key: minioadmin
-  secret-key: minioadmin
-  bucket: hndfactory
+  # 容器部署时由 1Panel 环境变量 MINIO_ENDPOINT 注入，此默认值仅本地直接运行时生效。
+  endpoint: ${MINIO_ENDPOINT:http://172.26.20.69:9005}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket: ${MINIO_BUCKET:hndfactory}
