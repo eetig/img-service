@@ -50,3 +50,7 @@ imgtool/
 docker-compose.yml
 docker-compose.override.yml
 .env
+# 本地开发配置（含真实 MinIO 凭据）
+# 放在项目根 config/ 下：Spring Boot 会自动读取，且不在 src/main/resources 内，
+# 因此既不会进仓库，也不会被打进 bootJar 产物
+/config/

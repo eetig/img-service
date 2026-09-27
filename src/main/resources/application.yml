@@ -1,5 +1,5 @@
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${SERVER_PORT:8082}
 
 spring:
   application:
@@ -7,18 +7,23 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: ${NACOS_SERVER_ADDR:1Panel-nacos-qquH-standalone:8848}
+        # 本地开发默认连本机 Nacos（127.0.0.1:8848）
+        # 容器部署由 application-prod.yml 覆盖为 1Panel 的容器名，此处不影响生产
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
 
 minio:
-  # 预签名 URL 的对外访问地址：必须填「客户端能访问到的」地址。
-  # 填 127.0.0.1 时只有本机能打开图片，局域网其他机器会连不上，故默认用本机局域网 IP。
-  # 若本机 IP 变化（DHCP），需同步改这里。
-  # 容器部署时由 1Panel 环境变量 MINIO_ENDPOINT 注入，此默认值仅本地直接运行时生效。
-  endpoint: ${MINIO_ENDPOINT:http://172.26.20.69:9005}
-  access-key: ${MINIO_ACCESS_KEY:minioadmin}
-  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  # 预签名 URL 的对外访问地址：必须是「客户端能访问到的」地址，
+  # 因为 getPresignedObjectUrl() 生成的链接里 host 就是 endpoint，该链接会返回给浏览器。
+  # 现指向 PC2 上 1Panel 部署的 MinIO 的 S3 API 端口（9025，不是控制台端口）。
+  # 容器部署时由 1Panel 环境变量 MINIO_ENDPOINT 注入并覆盖此默认值。
+  # 凭据不落盘到仓库，通过外部注入：
+  #   本地：项目根 config/application.yml（已 gitignore，自动生效，无需 profile）
+  #   生产：1Panel 环境变量（优先级最高）
+  endpoint: ${MINIO_ENDPOINT:http://124.220.60.154:9025}
+  access-key: ${MINIO_ACCESS_KEY:}
+  secret-key: ${MINIO_SECRET_KEY:}
   bucket: ${MINIO_BUCKET:hndfactory}

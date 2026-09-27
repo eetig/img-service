@@ -18,7 +18,7 @@ spring:
     nacos:
       discovery:
         # 容器之间用容器名互访，不要写 127.0.0.1（那是容器自己）
-        server-addr: ${NACOS_SERVER_ADDR:nacos:8848}
+        server-addr: ${NACOS_SERVER_ADDR:1Panel-nacos-qquH-standalone:8848}
         # Nacos 命名空间，留空=public。用命名空间隔离环境时必须填 namespace 的 ID（不是名称）
         namespace: ${NACOS_NAMESPACE:}
         group: ${NACOS_GROUP:DEFAULT_GROUP}
@@ -37,9 +37,10 @@ spring:
 #       详见交付步骤里的「坑点 1」。
 # ------------------------------------------------------------
 minio:
-  endpoint: ${MINIO_ENDPOINT:http://minio:9000}
-  access-key: ${MINIO_ACCESS_KEY:minioadmin}
-  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  endpoint: ${MINIO_ENDPOINT:http://124.220.60.154:9025}
+  # 生产凭据由 1Panel 环境变量 MINIO_ACCESS_KEY / MINIO_SECRET_KEY 注入，仓库内不落盘
+  access-key: ${MINIO_ACCESS_KEY:}
+  secret-key: ${MINIO_SECRET_KEY:}
   bucket: ${MINIO_BUCKET:hndfactory}
 
 # ============================================================
