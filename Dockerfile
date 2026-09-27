@@ -23,7 +23,7 @@ RUN mkdir -p /app/logs
 RUN groupadd -r app && useradd -r -g app -d /app app && chown -R app:app /app
 USER app
 
-EXPOSE 8080
+EXPOSE 8082
 
 # 用 exec 让 java 直接成为 PID 1：
 #   1) docker stop 的 SIGTERM 能被 JVM 收到，走 Spring 优雅停机

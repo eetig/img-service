@@ -86,7 +86,7 @@ RUN mkdir -p /app/logs
 RUN groupadd -r app && useradd -r -g app -d /app app && chown -R app:app /app
 USER app
 
-EXPOSE 8080
+EXPOSE 8082
 
 # exec 不能省：让 java 成为 PID 1，docker stop 的 SIGTERM 才能被 JVM 收到（优雅停机）
 # 不加 exec 时 SIGTERM 只发给 sh，容器要等 10s 被 SIGKILL 强杀
@@ -97,7 +97,7 @@ ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/xxx-service.jar --spring
 
 ```yaml
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${SERVER_PORT:8082}
   shutdown: graceful          # 优雅停机
 
 spring:
@@ -208,7 +208,7 @@ services:
       - ./logs:/app/logs
     ports:
       # 只绑 127.0.0.1，宿主机 Nginx 才能连、公网连不上
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8082:8082"
     networks:
       - nacos_default
 
@@ -227,7 +227,7 @@ networks:
 
 ```nginx
 location /api/xxx/ {
-    proxy_pass http://127.0.0.1:8080;
+    proxy_pass http://127.0.0.1:8082;
     proxy_set_header Host              $host;
     proxy_set_header X-Real-IP         $remote_addr;
     proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
@@ -247,7 +247,7 @@ location /api/xxx/ {
 docker ps | grep xxx-service
 docker logs xxx-service --tail 50
 #   期望：The following 1 profile is active: "prod"
-#        Tomcat started on port 8080 (http)
+#        Tomcat started on port 8082 (http)
 #        Started XxxApplication in x.xxx seconds
 
 # 2. 容器内连通性（注意：JRE 精简镜像没有 nc/curl！用 bash 内置 /dev/tcp）
