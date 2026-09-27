@@ -53,4 +53,7 @@ docker-compose.override.yml
 # 本地开发配置（含真实 MinIO 凭据）
 # 放在项目根 config/ 下：Spring Boot 会自动读取，且不在 src/main/resources 内，
 # 因此既不会进仓库，也不会被打进 bootJar 产物
-/config/
+# 注意：忽略的是 config/ 下的「内容」而不是目录本身，
+#       否则下面的 ! 例外规则会失效（git 无法重新包含已被排除目录里的文件）
+/config/*
+!/config/application.yml.example

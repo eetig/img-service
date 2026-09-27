@@ -1,0 +1,51 @@
+# ============================================================
+# 本地开发配置模板（img-service）
+#
+# 用法：复制为同目录下的 application.yml（该文件已被 .gitignore 排除，不会提交）
+#     cp config/application.yml.example config/application.yml
+#
+# 为什么放在这里：
+#   Spring Boot 会自动加载「工作目录/config/application.yml」，
+#   优先级高于 classpath 里的 application.yml 和 application-prod.yml，
+#   本地覆盖不需要改动（也不会提交）仓库内的任何配置文件。
+#   容器内工作目录没有 config/，所以生产完全不受影响。
+#
+# 为什么不共享：
+#   本文件被 .gitignore 排除 → 每台机器各存一份，互不覆盖、不会误提交。
+#
+# ────────────────────────────────────────────────────────────
+# ⚠️ Nacos 地址最容易填错的地方（已实测踩过）
+#
+#   server-addr 要填「服务端 API」端口，不是「控制台」端口。
+#   Nacos 3.x 起两者分开了：
+#       服务端 API  :8848    ← server-addr 填这个
+#       控制台      :8080    ← 浏览器里打开的地址，填进 server-addr 必然注册失败
+#
+#   自检命令（返回 200 就说明这是服务端 API）：
+#     curl -s -o /dev/null -w "%{http_code}\n" \
+#          http://<nacos-host>:8848/nacos/v1/ns/operator/metrics
+# ────────────────────────────────────────────────────────────
+#
+# 三个环境（本文件只管「本地」这一档）：
+#
+#   家里       : Nacos 192.168.3.7:8848 ，MinIO 192.168.3.7:9000
+#   公司       : Nacos 127.0.0.1:8848
+#   远程服务器 : 不用本文件！容器内没有 config/，
+#                走 application-prod.yml + compose 的环境变量
+# ============================================================
+
+spring:
+  cloud:
+    nacos:
+      discovery:
+        # 按你当前所在环境改成上面三个值之一
+        server-addr: 192.168.3.7:8848
+
+minio:
+  # ⚠️ 必须是「浏览器能访问到」的地址，不能填容器名。
+  # getPresignedObjectUrl() 生成的预签名 URL 里 host 就是本值，会直接返回给前端浏览器。
+  endpoint: http://192.168.3.7:9000
+  # 凭据不写进仓库，只在本文件里填
+  access-key: 在此填入 MinIO Access Key
+  secret-key: 在此填入 MinIO Secret Key
+  bucket: hndfactory
