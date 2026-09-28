@@ -8,6 +8,18 @@ FROM eclipse-temurin:21-jre
 ENV TZ=Asia/Shanghai
 ENV LANG=C.UTF-8
 
+# ------------------------------------------------------------
+# 缩略图功能（ImageThumbnailUtil）依赖 JDK 的 AWT / ImageIO。
+# Spring Boot 默认 java.awt.headless=true，纯 BufferedImage 缩放不需要字体，
+# 理论上开箱可用（已在本地以 headless 模式验证 4 个用例通过）。
+#
+# 若部署后 /thumbs/ 接口报 500，且日志出现：
+#     libfontconfig.so.1: cannot open shared object file
+# 说明基础镜像缺字体库，取消下面这行的注释后重新构建镜像即可：
+# RUN apt-get update && apt-get install -y --no-install-recommends fontconfig \
+#     && rm -rf /var/lib/apt/lists/*
+# ------------------------------------------------------------
+
 # JVM 参数：可在 1Panel 环境变量里覆盖（改这个不用重新构建镜像）
 ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai"
 
