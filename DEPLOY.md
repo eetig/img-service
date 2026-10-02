@@ -107,6 +107,9 @@ spring:
     timeout-per-shutdown-phase: 20s
   cloud:
     nacos:
+      # 云 Nacos 开了鉴权时必填（与 discovery 同级；不填会 403）
+      username: ${NACOS_USERNAME:}
+      password: ${NACOS_PASSWORD:}
       discovery:
         server-addr: ${NACOS_SERVER_ADDR:nacos:8848}   # 容器名，不是 127.0.0.1
         namespace: ${NACOS_NAMESPACE:}                  # 必须填 ID 不是名称
@@ -200,6 +203,8 @@ services:
     environment:
       - "TZ=Asia/Shanghai"
       - "NACOS_SERVER_ADDR=nacos:8848"
+      # - "NACOS_USERNAME=nacos"
+      # - "NACOS_PASSWORD=改成真实密码"
       - "NACOS_NAMESPACE=你的命名空间ID"
       # 按项目增删
       # - "MYSQL_HOST=mysql"
