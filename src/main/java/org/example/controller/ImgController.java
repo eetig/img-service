@@ -3,6 +3,7 @@ package org.example.controller;
 import java.time.Duration;
 import org.example.dto.Result;
 import org.example.dto.UploadResult;
+import org.example.dto.VesselDrawingResult;
 import org.example.service.ImgService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,22 @@ public class ImgController {
     @PostMapping("/upload")
     public Result<UploadResult> upload(@RequestParam("file") MultipartFile file) {
         return Result.success(imgService.upload(file));
+    }
+
+    /**
+     * 容器底图上传（「设备数据维护」页用，2026-10-06）。
+     *
+     * <p>与上面的 {@code /upload} 分开：那个是单据图片（回一个 URL 直接显示），
+     * 这个是容器底图 —— **一张进、两张出**（白纸版 + 亮线版，深浅两个主题各要一版），
+     * 回的是两个文件名，由调用方存进 {@code equipment_ledger.image_file}。
+     *
+     * <p>与 {@code /upload} 一样不带鉴权注解：本服务在网关/域名侧不对外暴露
+     * （Nginx 只放开 /files、/thumbs、/api/ocr 几条），写入口由业务侧
+     * {@code /api/equipment/ledger/**} 统一把关。
+     */
+    @PostMapping("/vessel-upload")
+    public Result<VesselDrawingResult> vesselUpload(@RequestParam("file") MultipartFile file) {
+        return Result.success(imgService.uploadVesselDrawing(file));
     }
 
     @DeleteMapping("/delete")

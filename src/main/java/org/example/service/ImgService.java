@@ -9,14 +9,20 @@ import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import javax.imageio.ImageIO;
 import org.example.config.MinioProperties;
 import org.example.dto.UploadResult;
+import org.example.dto.VesselDrawingResult;
 import org.example.exception.BusinessException;
 import org.example.util.ImageThumbnailUtil;
+import org.example.util.VesselDrawingUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -28,6 +34,9 @@ public class ImgService {
     private static final Logger log = LoggerFactory.getLogger(ImgService.class);
 
     private static final long MAX_SIZE = 5L * 1024 * 1024;
+
+    /** 容器底图的上限：图纸扫描件常有几 MB，比单据照片放宽一档 */
+    private static final long VESSEL_DRAWING_MAX_SIZE = 10L * 1024 * 1024;
     private static final int URL_EXPIRE_MINUTES = 60;
 
     /** 缩略图对象名前缀（★ 契约冻结，见《前后端改动统筹》2.2） */
@@ -185,6 +194,74 @@ public class ImgService {
         } catch (Exception e) {
             log.warn("缩略图回存失败, object={}, 原因={}", thumbName, e.getMessage());
         }
+    }
+
+    // ===== 容器底图（设备数据维护页用，2026-10-06）=====
+
+    /**
+     * 容器底图上传：**一张进、两张出**。
+     *
+     * <p>与 {@link #upload} 分开而不是加个参数：两者的产物形状根本不同
+     * （那个回一个 URL 供单据图片直接显示；这个要回两个文件名，且必须落成
+     * 「白纸版 + 亮线版」一对，文件名还要满足前端的 `-dark` 后缀约定）。
+     * 混在一个方法里，两边的规则会互相牵扯。
+     *
+     * <p>处理口径与 `resources/compress-vessel-images.py` 完全一致（见
+     * {@link VesselDrawingUtil}），这样后台上传的底图与内置那四张长得一样。
+     */
+    public VesselDrawingResult uploadVesselDrawing(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("上传文件不能为空");
+        }
+        // 底图比单据照片大：图纸扫描件常有几 MB
+        if (file.getSize() > VESSEL_DRAWING_MAX_SIZE) {
+            throw new BusinessException("底图文件不能超过 10MB");
+        }
+
+        String ext = getExtension(file.getOriginalFilename());
+        if (!"jpg".equalsIgnoreCase(ext) && !"png".equalsIgnoreCase(ext)) {
+            throw new BusinessException("仅支持 jpg/png 格式的图片");
+        }
+
+        BufferedImage src;
+        try (InputStream in = file.getInputStream()) {
+            src = ImageIO.read(in);
+        } catch (IOException e) {
+            throw new BusinessException("图片读取失败：" + e.getMessage());
+        }
+        if (src == null) {
+            // ImageIO 读不出内容时返回 null（不是抛异常）—— 不判这一下会 NPE
+            throw new BusinessException("无法识别的图片内容，请换一张 jpg/png");
+        }
+
+        BufferedImage whitePaper = VesselDrawingUtil.toWhitePaper(src);
+        BufferedImage brightLines = VesselDrawingUtil.toBrightLines(whitePaper);
+
+        String base = UUID.randomUUID().toString().replace("-", "");
+        String fileName = base + ".png";
+        String darkFileName = base + "-dark.png";
+        try {
+            ensureBucket();
+            putPng(fileName, whitePaper);
+            putPng(darkFileName, brightLines);
+        } catch (Exception e) {
+            log.error("容器底图上传失败, fileName={}", fileName, e);
+            throw new BusinessException("底图保存失败：" + e.getMessage());
+        }
+        return new VesselDrawingResult(fileName, darkFileName);
+    }
+
+    /** 把内存里的图编码成 PNG 存进 MinIO（统一 png：脚本那边也是 png，两端命名要对上） */
+    private void putPng(String objectName, BufferedImage image) throws Exception {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", buffer);
+        byte[] bytes = buffer.toByteArray();
+        minioClient.putObject(PutObjectArgs.builder()
+                .bucket(properties.getBucket())
+                .object(objectName)
+                .stream(new ByteArrayInputStream(bytes), bytes.length, -1)
+                .contentType("image/png")
+                .build());
     }
 
     private void ensureBucket() throws Exception {
