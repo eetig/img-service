@@ -19,8 +19,12 @@ spring:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
   servlet:
     multipart:
-      max-file-size: 5MB
-      max-request-size: 5MB
+      # 底图接口（/api/img/vessel-upload）的代码上限是 10MB（ImgService.VESSEL_DRAWING_MAX_SIZE），
+      # multipart 若停在 5MB，Spring/Tomcat 会在进 handler **之前**就按 5MB 截断 ——
+      # 那条 10MB 分支永远进不去，图纸扫描件必然上传失败（2026-10-15 code-review 的 Critical 1）。
+      # 两个数字必须一起改：max-file-size 10MB，max-request-size 稍大以容纳 multipart 开销。
+      max-file-size: 10MB
+      max-request-size: 12MB
 
 minio:
   # 预签名 URL 的对外访问地址：必须是「客户端能访问到的」地址，

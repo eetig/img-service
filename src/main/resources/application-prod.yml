@@ -33,8 +33,10 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 5MB
-      max-request-size: 5MB
+      # 与 application.yml 同口径：代码上限 10MB（ImgService.VESSEL_DRAWING_MAX_SIZE），
+      # multipart 不能比它小，否则底图接口的 10MB 分支永远不可达（2026-10-15 code-review 的 Critical 1）。
+      max-file-size: 10MB
+      max-request-size: 12MB
 
 # ------------------------------------------------------------
 # MinIO

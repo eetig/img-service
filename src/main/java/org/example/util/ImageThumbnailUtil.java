@@ -37,6 +37,8 @@ public final class ImageThumbnailUtil {
      * @throws IOException 图片无法解码，或 JPEG 编码失败
      */
     public static byte[] scaleToWidth(byte[] source, int targetWidth) throws IOException {
+        // 先量尺寸再解码：桶里的对象大小不受本服务约束，像素炸弹会在这里分配 1.6GB（见 ImageGuard 注释）
+        ImageGuard.assertDecodable(source);
         BufferedImage src = ImageIO.read(new ByteArrayInputStream(source));
         if (src == null) {
             throw new IOException("无法解码图片（格式不支持或文件已损坏）");

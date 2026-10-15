@@ -115,6 +115,9 @@ public class ImgController {
     private ResponseEntity<byte[]> imageResponse(byte[] data, MediaType contentType) {
         return ResponseEntity.ok()
                 .contentType(contentType)
+                // 兜底：Content-Type 按扩展名推断（contract 2.1），若将来有非图片内容落到同名 key，
+                // 这一行阻止浏览器按嗅探结果当脚本执行
+                .header("X-Content-Type-Options", "nosniff")
                 .cacheControl(CACHE_CONTROL)
                 .body(data);
     }
