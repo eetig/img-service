@@ -25,6 +25,10 @@ spring:
       # 两个数字必须一起改：max-file-size 10MB，max-request-size 稍大以容纳 multipart 开销。
       max-file-size: 10MB
       max-request-size: 12MB
+      # 超过 1MB 的分片才落容器盘。Spring 默认是 0 = **每一个**上传都先完整写进临时文件、
+      # 再由 getBytes() 读回堆（多一次全量磁盘往返）；本服务图片多为几百 KB，放内存更划算，
+      # 大图仍走盘不受影响。2026-10-16 性能审查，变更-074。
+      file-size-threshold: 1MB
 
 minio:
   # 预签名 URL 的对外访问地址：必须是「客户端能访问到的」地址，
