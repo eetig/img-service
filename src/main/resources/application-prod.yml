@@ -40,10 +40,28 @@ spring:
 
 # ------------------------------------------------------------
 # MinIO
-# 注意：endpoint 必须填「浏览器能访问到的公网域名」，不能填容器名。
-# 原因：MinioClient.getPresignedObjectUrl() 生成的预签名 URL 里的 host 就是 endpoint，
-#       这个 URL 会返回给前端浏览器，写容器名浏览器无法解析。
-#       详见交付步骤里的「坑点 1」。
+#
+# ⚠️ endpoint 是**服务端内部**地址（img-service → MinIO），不是给浏览器用的 ——
+#    生产应填**同一 docker 网络里的容器名**，例如：
+#        MINIO_ENDPOINT=http://<minio容器名>:9000
+#    填公网域名（frp 映射）会让每张图多绕一次公网：
+#        容器 → 宿主 → 公网中转 → frp 隧道 → 回到宿主 → MinIO
+#    两端明明在同一台机器上，却要占家里最稀缺的**上行带宽**，还与同一个隧道里的
+#    ssh / mysql / redis / 各服务端口抢带宽。2026-10-16 性能审查实测：
+#    4.1MB 图上传 8.68s、下载 8.62s ⇒ 约 3.75 Mbps —— 全被这条绕行吃掉。
+#
+# 为什么以前必须填公网域名（**该理由现在不成立了**）：
+#    旧前端直接拿 getPresignedObjectUrl() 的链接显示图片，而预签名 URL 里的 host
+#    就是 endpoint，写容器名浏览器解析不了。该路径已废弃：
+#      · 前端/手机端现在一律用 img-service 自己提供的 /files/xxx、/thumbs/xxx
+#        （相对路径，由 img-service 或 Nginx 提供），浏览器根本不直连 MinIO；
+#      · /api/img/getPreviewUrl 已无任何调用方（前后端改动统筹.md 记为"保留作为回退"）。
+#    ⚠️ 别把这条内部 endpoint 与 hnd_factory 的 IMAGE_BASE_URL 混为一谈：后者是浏览器
+#       要用的对外地址，**必须**保持公网可达，两者各管一段、不要互相看齐。
+#
+# 若将来又要给浏览器用预签名 URL：endpoint 必须重新公网可达；minio-java 没有
+#   "单次请求覆盖 host"的入口，届时正确做法是**再建一个**用公网 endpoint 的
+#   MinioClient 专职签名，而不是把内部读写路径也改回公网。
 # ------------------------------------------------------------
 minio:
   endpoint: ${MINIO_ENDPOINT:http://124.220.60.154:9025}
