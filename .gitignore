@@ -57,3 +57,5 @@ docker-compose.override.yml
 #       否则下面的 ! 例外规则会失效（git 无法重新包含已被排除目录里的文件）
 /config/*
 !/config/application.yml.example
+# 容器日志挂载目录（宿主机 ./logs），不入库
+logs/
