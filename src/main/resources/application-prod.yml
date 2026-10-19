@@ -9,7 +9,7 @@ server:
 
 spring:
   application:
-    name: img-service
+    name: file-service
 
   lifecycle:
     timeout-per-shutdown-phase: 20s
@@ -41,7 +41,7 @@ spring:
 # ------------------------------------------------------------
 # MinIO
 #
-# ⚠️ endpoint 是**服务端内部**地址（img-service → MinIO），不是给浏览器用的 ——
+# ⚠️ endpoint 是**服务端内部**地址（file-service → MinIO），不是给浏览器用的 ——
 #    生产应填**同一 docker 网络里的容器名**，例如：
 #        MINIO_ENDPOINT=http://<minio容器名>:9000
 #    填公网域名（frp 映射）会让每张图多绕一次公网：
@@ -53,8 +53,8 @@ spring:
 # 为什么以前必须填公网域名（**该理由现在不成立了**）：
 #    旧前端直接拿 getPresignedObjectUrl() 的链接显示图片，而预签名 URL 里的 host
 #    就是 endpoint，写容器名浏览器解析不了。该路径已废弃：
-#      · 前端/手机端现在一律用 img-service 自己提供的 /files/xxx、/thumbs/xxx
-#        （相对路径，由 img-service 或 Nginx 提供），浏览器根本不直连 MinIO；
+#      · 前端/手机端现在一律用 file-service 自己提供的 /files/xxx、/thumbs/xxx
+#        （相对路径，由 file-service 或 Nginx 提供），浏览器根本不直连 MinIO；
 #      · /api/img/getPreviewUrl 已无任何调用方（前后端改动统筹.md 记为"保留作为回退"）。
 #    ⚠️ 别把这条内部 endpoint 与 hnd_factory 的 IMAGE_BASE_URL 混为一谈：后者是浏览器
 #       要用的对外地址，**必须**保持公网可达，两者各管一段、不要互相看齐。
@@ -71,9 +71,9 @@ minio:
   bucket: ${MINIO_BUCKET:hndfactory}
 
 # ============================================================
-# 以下 MySQL / Redis 当前 img-service 并未使用
+# 以下 MySQL / Redis 当前 file-service 并未使用
 # （build.gradle 里没有 mysql driver / spring-boot-starter-data-redis 依赖）
-# 如果后续 img-service 要落库或做缓存，取消注释并补上对应依赖即可
+# 如果后续 file-service 要落库或做缓存，取消注释并补上对应依赖即可
 # ============================================================
 #  datasource:
 #    driver-class-name: com.mysql.cj.jdbc.Driver
@@ -103,7 +103,7 @@ logging:
     org.example: info
   file:
     # 输出到挂载目录，1Panel 里可持久化到宿主机
-    name: /app/logs/img-service.log
+    name: /app/logs/file-service.log
   logback:
     rollingpolicy:
       max-file-size: 20MB

@@ -49,11 +49,11 @@ tasks.named('jar') {
 
 // 固定产物文件名，让 Dockerfile 里 COPY 的路径稳定、不随版本号变化
 bootJar {
-    archiveFileName = 'img-service.jar'
+    archiveFileName = 'file-service.jar'
     // 便于在服务器上确认镜像内跑的到底是哪次构建
     manifest {
         attributes(
-                'Implementation-Title': 'img-service',
+                'Implementation-Title': 'file-service',
                 'Implementation-Version': project.version,
                 'Build-Time': new Date().format("yyyy-MM-dd HH:mm:ss")
         )

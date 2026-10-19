@@ -1,5 +1,5 @@
 # ============================================================
-# img-service 运行镜像
+# file-service 运行镜像
 # 前提：jar 已在本地用 gradlew bootJar 打好，与 Dockerfile 一起上传
 # 因此这里不装 Gradle/JDK，只装 JRE，镜像小、构建快、不依赖服务器网络拉依赖
 # ============================================================
@@ -25,8 +25,8 @@ ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+UseG1GC -XX:+Hea
 
 WORKDIR /app
 
-# 产物由 build.gradle 的 bootJar.archiveFileName 固定为 img-service.jar
-COPY img-service.jar /app/img-service.jar
+# 产物由 build.gradle 的 bootJar.archiveFileName 固定为 file-service.jar
+COPY file-service.jar /app/file-service.jar
 
 # 挂载点：堆转储 / 应用日志（1Panel 里把 /app/logs 映射到宿主机磁盘）
 RUN mkdir -p /app/logs
@@ -46,4 +46,4 @@ EXPOSE 8082
 # 用 exec 让 java 直接成为 PID 1：
 #   1) docker stop 的 SIGTERM 能被 JVM 收到，走 Spring 优雅停机
 #   2) 不带 exec 时 SIGTERM 只发给 sh，JVM 收不到，容器要等 10s 被 SIGKILL 强杀
-ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/img-service.jar --spring.profiles.active=prod"]
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/file-service.jar --spring.profiles.active=prod"]

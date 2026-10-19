@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: img-service
+    name: file-service
   cloud:
     nacos:
       # 仅对「开了鉴权的 Nacos」需要填；留空=不传账密（本机 Nacos 未开鉴权，留空即可）。
@@ -35,7 +35,7 @@ spring:
       file-size-threshold: 1MB
 
 minio:
-  # ⚠️ 这是**服务端内部**地址（img-service → MinIO），不是给浏览器用的。
+  # ⚠️ 这是**服务端内部**地址（file-service → MinIO），不是给浏览器用的。
   #    · 本机开发没有 docker 内网，只能走公网映射（下面这个默认值就是本机在用的）；
   #    · **生产**（容器与 MinIO 同宿主同网络）必须用容器名，例如
   #      `MINIO_ENDPOINT=http://<minio容器名>:9000` —— 否则每张图要多绕一次公网，
